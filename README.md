@@ -1,6 +1,6 @@
 # HighBro
 React Native news app for finances, in concise words.
-Getting Started
+# Getting Started
 To get started with Finance News Reader, follow these simple steps:
 
 Installation: Clone the repository to your local machine and install dependencies using npm install.
