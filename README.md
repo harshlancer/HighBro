@@ -9,8 +9,8 @@ To get started with Finance News Reader, follow these simple steps:
 
 - Explore: Browse through the news articles, customize your feed, and enjoy staying informed about finance news.
 
-Technologies Used
-React Native
-JavaScript
-RESTful APIs
-Expo (optional, if using Expo for development)
+- Technologies Used
+  - React Native
+  - JavaScript
+  - RESTful APIs
+  - Expo (optional, if using Expo for development)
