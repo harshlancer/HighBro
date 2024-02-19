@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, Share, StyleSheet } from 'react-native';
 import Swiper from 'react-native-swiper';
 import Tts from "react-native-tts";
+import { Dimensions } from 'react-native';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 interface Article {
   title: string;
   description: string;
@@ -22,29 +25,39 @@ const NewsWidget: React.FC<Props> = ({ isDarkMode,setIsDarkMode }: Props) => {
   const [isSpeaking,setSpeaking]=useState(false)
   const key = '995e4a922f2a496f9bbf2ffe227a4e33';
   const api_url = 'https://newsapi.org/v2/top-headlines?country=in&category=business&apiKey=995e4a922f2a496f9bbf2ffe227a4e33';
-  const hindiTeslaNewsUrl ="https://newsapi.org/v2/everything? q=टेस्ला &from=2024-01-06&sortBy=publishedAt&apiKey=995e4a922f2a496f9bbf2ffe227a4e33"
 
   
+  const CACHE_KEY = 'newsData';
+  const MAX_CACHE_SIZE = 50; // Adjust this as needed
+
   useEffect(() => {
-   
-    fetchData();
+    fetchData(); // Fetch data initially when component mounts
+    const intervalId = setInterval(fetchData, 36000000); // Fetch data every 1 minute (adjust as needed)
+    return () => clearInterval(intervalId); // Clean up interval on unmount
   }, []);
 
-  const fetchData = () => {
-    axios
-      .get(api_url)
-      .then((response) => {
-        const data = response.data.articles.map((article: Article) => ({
-          title: article.title,
-          description: article.description,
-          url: article.url,
-          urlToImage: article.urlToImage,
-        }));
-        setNewsData(data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('https://newsapi.org/v2/top-headlines?country=in&category=business&apiKey=995e4a922f2a496f9bbf2ffe227a4e33');
+      const freshNews = response.data.articles.map((article: Article) => ({
+        title: article.title,
+        description: article.description,
+        url: article.url,
+        urlToImage: article.urlToImage,
+      }));
+      setNewsData(freshNews); 
+      // Cache the fresh data
+      const cachedData = await AsyncStorage.getItem(CACHE_KEY);
+      let cachedNews: Article[] = cachedData ? JSON.parse(cachedData) : [];
+      cachedNews = [...cachedNews, ...freshNews]; // Append fresh news to existing cached news
+      if (cachedNews.length > MAX_CACHE_SIZE) {
+        cachedNews = cachedNews.slice(-MAX_CACHE_SIZE); // Keep only the latest MAX_CACHE_SIZE items
+      }
+
+      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cachedNews));
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
   };
 
   const handlePress = (url: string) => {
@@ -125,17 +138,48 @@ const NewsWidget: React.FC<Props> = ({ isDarkMode,setIsDarkMode }: Props) => {
     </View>
   );
 };
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
+interface Styles {
+  container: {
+    flex: number;
+    padding: string;
+    backgroundColor: string;
+  };
+  darkContainer: {
+    flex: number;
+    padding: string;
+    backgroundColor: string;
+  };
+  buttonsContainer: {
+    flexDirection: 'row';
+    justifyContent: 'space-around';
+    marginTop: number;
+  };
+  button: {
+    backgroundColor: string;
+    paddingVertical: string;
+    paddingHorizontal: string;
+    borderRadius: number;
+  };
+  buttonText: {
+    color: string;
+    fontWeight: 'bold';
+  };
+  // Define other styles here...
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    padding: '2%',
     backgroundColor: '#e5e4e2',
   },
-  darkContainer:{flex: 1,
-    padding: 16,
-    backgroundColor: '#3b3c36',},
-
+  darkContainer: {
+    flex: 1,
+    padding: '2%',
+    backgroundColor: '#3b3c36',
+  },
   buttonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -143,8 +187,8 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#3498db',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: '1%',
+    paddingHorizontal: '3%',
     borderRadius: 4,
   },
   buttonText: {
