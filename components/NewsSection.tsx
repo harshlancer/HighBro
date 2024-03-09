@@ -48,11 +48,11 @@ const NewsWidget: React.FC<Props> = ({ isDarkMode,setIsDarkMode }: Props) => {
       setNewsData(freshNews); 
       // Cache the fresh data
       const cachedData = await AsyncStorage.getItem(CACHE_KEY);
-      let cachedNews: Article[] = cachedData ? JSON.parse(cachedData) : [];
-      cachedNews = [...cachedNews, ...freshNews]; // Append fresh news to existing cached news
-      if (cachedNews.length > MAX_CACHE_SIZE) {
-        cachedNews = cachedNews.slice(-MAX_CACHE_SIZE); // Keep only the latest MAX_CACHE_SIZE items
-      }
+let cachedNews: Article[] = cachedData ? JSON.parse(cachedData) : [];
+cachedNews = [...cachedNews, ...freshNews]; // Append fresh news to existing cached news
+if (cachedNews.length > MAX_CACHE_SIZE) {
+  cachedNews = cachedNews.slice(-MAX_CACHE_SIZE); // Keep only the latest MAX_CACHE_SIZE items
+}
 
       await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cachedNews));
     } catch (error) {
@@ -99,8 +99,9 @@ const NewsWidget: React.FC<Props> = ({ isDarkMode,setIsDarkMode }: Props) => {
 
     return (
       <View style={isDarkMode ? styles.darkCard : styles.card}>
-        <Text style={isDarkMode ? styles.darkHeading : styles.heading}>{item.title}</Text>
-        <Text style={isDarkMode ? styles.darkSummaryText : styles.summaryText}>{item.description}</Text>
+        <Text style={isDarkMode ? styles.darkHeading : styles.heading}  allowFontScaling={false}>{item.title}</Text>
+        <View style={styles.line}></View>
+        <Text style={isDarkMode ? styles.darkSummaryText : styles.summaryText}  allowFontScaling={false}>{item.description}</Text>
         {showPlaceholderImage ? (
           <Image
             source={require('./No_Image_Available.png')}
@@ -109,18 +110,18 @@ const NewsWidget: React.FC<Props> = ({ isDarkMode,setIsDarkMode }: Props) => {
         ) : (
           <Image source={{ uri: item.urlToImage }} style={styles.bannerImage} />
         )}
-        <View style={styles.buttonsContainer}>
+        <View style={styles.buttonsContainer} >
           <TouchableOpacity onPress={() => handlePress(item.url)} style={styles.button}>
-            <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}>Read More</Text>
+            <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}  allowFontScaling={false}>Read More</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleShare} style={[styles.button, { backgroundColor: '#27ae60' }]}>
-            <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}>Share</Text>
+            <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}  allowFontScaling={false}>Share</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleSpeak} style={[styles.button, { backgroundColor: 'gray' }]}>
-            <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}>{isSpeaking ? "Stop" : "Speak"}</Text>
+            <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}  allowFontScaling={false}>{isSpeaking ? "Stop" : "Speak"}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleDark} style={[styles.button, { backgroundColor: '#A7D397' }]}>
-            <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}>{isDarkMode ? "Light" : "Dark"  }</Text>
+            <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}  allowFontScaling={false}>{isDarkMode ? "Light" : "Dark"  }</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -166,7 +167,6 @@ interface Styles {
     color: string;
     fontWeight: 'bold';
   };
-  // Define other styles here...
 }
 
 const styles = StyleSheet.create({
@@ -175,6 +175,13 @@ const styles = StyleSheet.create({
     padding: '2%',
     backgroundColor: '#e5e4e2',
   },
+  line: {
+    borderBottomColor: '#ccc',
+    borderBottomWidth: 1,
+    marginBottom: 8,
+    marginTop:8,
+  },
+  
   darkContainer: {
     flex: 1,
     padding: '2%',
@@ -263,7 +270,7 @@ const styles = StyleSheet.create({
   },
   bannerImage: {
     width: '100%',
-    height: 300,
+    height: 400,
     resizeMode: 'cover',
     borderRadius: 8,
   },

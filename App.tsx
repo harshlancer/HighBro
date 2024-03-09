@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {View, SafeAreaView, StyleSheet, TouchableOpacity, Text, LogBox } from 'react-native';
 import NewsWidget from './components/NewsSection';
-
+interface LanguageButtonText {
+  color: string;
+  fontSize: number;
+  allowFontScaling: boolean;
+}
 const App = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   
@@ -46,7 +50,8 @@ const styles = StyleSheet.create({
   languageButtonText: {
     color: '#333',
     fontSize: 16,
-  },
+    allowFontScaling: false, // Use the interface for type safety
+  } as LanguageButtonText, 
   selectedLanguageButtonText: {
     color: '#fff',
   },
