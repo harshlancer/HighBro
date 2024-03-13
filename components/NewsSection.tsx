@@ -48,13 +48,17 @@ const NewsWidget: React.FC<Props> = ({ isDarkMode,setIsDarkMode }: Props) => {
       setNewsData(freshNews); 
       // Cache the fresh data
       const cachedData = await AsyncStorage.getItem(CACHE_KEY);
-let cachedNews: Article[] = cachedData ? JSON.parse(cachedData) : [];
-cachedNews = [...cachedNews, ...freshNews]; // Append fresh news to existing cached news
-if (cachedNews.length > MAX_CACHE_SIZE) {
-  cachedNews = cachedNews.slice(-MAX_CACHE_SIZE); // Keep only the latest MAX_CACHE_SIZE items
-}
-
-      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cachedNews));
+      let cachedNews: Article[] = cachedData ? JSON.parse(cachedData) : [];
+      cachedNews = [...cachedNews, ...freshNews]; // Append fresh news to existing cached news
+      const newArticles = freshNews.filter((newArticle:any) => !cachedNews.find((cached) => cached.url === newArticle.url)
+      );
+      const updatedNews = [...cachedNews, ...newArticles];
+      if (updatedNews.length > MAX_CACHE_SIZE) {
+        updatedNews.splice(0, updatedNews.length - MAX_CACHE_SIZE);
+      }
+  
+      setNewsData(updatedNews);
+      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(updatedNews));
     } catch (error) {
       console.error('Error fetching data:', error);
     }
