@@ -1,15 +1,22 @@
+import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
-import {View, SafeAreaView, StyleSheet, TouchableOpacity, Text, LogBox } from 'react-native';
+import { View, SafeAreaView, StyleSheet, LogBox } from 'react-native';
 import NewsWidget from './components/NewsSection';
+import { NavigationContainer } from '@react-navigation/native';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { DarkModeProvider } from './components/DarkModeProvider';
+import ContactUs from './screens/ContactUs';
+import AboutUs from './screens/AboutUs';
+
 interface LanguageButtonText {
   color: string;
   fontSize: number;
   allowFontScaling: boolean;
 }
+
 const App = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  
-  
+  const Drawer = createDrawerNavigator();
 
   useEffect(() => {
     // Ignore specific warnings related to new NativeEventEmitter
@@ -17,13 +24,28 @@ const App = () => {
       "`new NativeEventEmitter()` was called with a non-null argument without the required `addListener` method."
     ]);
   }, []);
+  function MyDrawer() {
+    return (
+      
+      <Drawer.Navigator >
+          <Drawer.Screen name="Feed" component={NewsWidget}  />
+          <Drawer.Screen name="Contact Us" component={ContactUs}  />
+          <Drawer.Screen name="About Us" component={AboutUs}  />
+          
+      </Drawer.Navigator>
+    );
+  }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#333' : '#fff' }]}>
+    <DarkModeProvider>
+
+    <NavigationContainer>
       
-      <NewsWidget isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode}  />
-      {/* Your other components or code here */}
-    </SafeAreaView>
+      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#333' : '#fff' }]}> 
+        <MyDrawer />
+      </SafeAreaView> 
+     </NavigationContainer>
+    </DarkModeProvider>
   );
 };
 
@@ -50,8 +72,8 @@ const styles = StyleSheet.create({
   languageButtonText: {
     color: '#333',
     fontSize: 16,
-    allowFontScaling: false, // Use the interface for type safety
-  } as LanguageButtonText, 
+    allowFontScaling: false,
+  } as LanguageButtonText,
   selectedLanguageButtonText: {
     color: '#fff',
   },

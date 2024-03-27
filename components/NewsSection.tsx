@@ -5,6 +5,7 @@ import { View, Text, Image, TouchableOpacity, Share, StyleSheet } from 'react-na
 import Swiper from 'react-native-swiper';
 import Tts from "react-native-tts";
 import { Dimensions } from 'react-native';
+import { useDarkMode } from './DarkModeProvider';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 interface Article {
@@ -20,11 +21,13 @@ interface Props {
 }
 
 
-const NewsWidget: React.FC<Props> = ({ isDarkMode,setIsDarkMode }: Props) => {
+const NewsWidget =(
+  ) => {
   const [newsData, setNewsData] = useState<Article[]>([]);
   const [isSpeaking,setSpeaking]=useState(false)
   const key = '995e4a922f2a496f9bbf2ffe227a4e33';
   const api_url = 'https://newsapi.org/v2/top-headlines?country=in&category=business&apiKey=995e4a922f2a496f9bbf2ffe227a4e33';
+  const { isDarkMode, setIsDarkMode } = useDarkMode(); // Use the useDarkMode hook
 
   
   const CACHE_KEY = 'newsData';
@@ -249,27 +252,27 @@ const styles = StyleSheet.create({
   heading: {
     color: 'black',
     fontFamily: 'oswald',
-    fontSize: 22,
+    fontSize: 21,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   darkHeading: {
     color: 'white',
     fontFamily: 'oswald',
-    fontSize: 22,
+    fontSize: 21,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   summaryText: {
-    fontSize: 18,
+    fontSize: 16,
+    lineHeight: 22,
     color: '#555',
-    lineHeight: 25,
     marginBottom: 8,
   },
   darkSummaryText: {
-    fontSize: 18,
+    fontSize: 16,
+    lineHeight: 22,
     color: 'white',
-    lineHeight: 25,
     marginBottom: 8,
   },
   bannerImage: {
