@@ -6,10 +6,42 @@ const ContactUs = () => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
 
-  const handleSendEmail = () => {
-    // Implement email sending logic here
-    // ...
+  const handleSendEmail = async () => {
+    if (!name || !email || !message) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    const data = {
+      name,
+      email,
+      message,
+    };
+
+    try {
+      const response = await fetch('https://formspree.io/f/xwkgrbjl', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        alert('Email sent successfully!');
+        setName('');
+        setEmail('');
+        setMessage('');
+      } else {
+        alert('There was an error sending your email. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('An unexpected error occurred. Please try again later.');
+    }
   };
+
 
   return (
     <View style={styles.container}>
