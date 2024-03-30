@@ -1,12 +1,14 @@
 import 'react-native-gesture-handler';
-import React, { useState, useEffect } from 'react';
-import { View, SafeAreaView, StyleSheet, LogBox } from 'react-native';
+import React, {useEffect} from 'react';
+import {View, SafeAreaView, StyleSheet, LogBox} from 'react-native';
 import NewsWidget from './components/NewsSection';
-import { NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import { DarkModeProvider } from './components/DarkModeProvider';
+import {NavigationContainer} from '@react-navigation/native';
+import {createDrawerNavigator} from '@react-navigation/drawer';
 import ContactUs from './screens/ContactUs';
 import AboutUs from './screens/AboutUs';
+import {Provider, useSelector, useDispatch} from 'react-redux'; // Import Redux dependencies
+import store from './store/store'; // Import Redux store
+import {toggleDarkMode} from './store/actions/action'; // Import toggleDarkMode action
 
 interface LanguageButtonText {
   color: string;
@@ -15,37 +17,52 @@ interface LanguageButtonText {
 }
 
 const App = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const Drawer = createDrawerNavigator();
 
   useEffect(() => {
     // Ignore specific warnings related to new NativeEventEmitter
     LogBox.ignoreLogs([
-      "`new NativeEventEmitter()` was called with a non-null argument without the required `addListener` method."
+      '`new NativeEventEmitter()` was called with a non-null argument without the required `addListener` method.',
     ]);
   }, []);
+
+  const dispatch = useDispatch();
+  const isDarkMode = useSelector((state: any) => state.isDarkMode);
+
   function MyDrawer() {
     return (
-      
-      <Drawer.Navigator >
-          <Drawer.Screen name="Feed" component={NewsWidget}  />
-          <Drawer.Screen name="Contact Us" component={ContactUs}  />
-          <Drawer.Screen name="About Us" component={AboutUs}  />
-          
+      <Drawer.Navigator
+        screenOptions={{
+          drawerStyle: {
+            backgroundColor: isDarkMode ? '#333' : '#fff', // Set background color based on dark mode
+          },
+          drawerLabelStyle: {
+            color: isDarkMode ? '#fff' : '#333', // Set text color based on dark mode
+          },
+          headerStyle: {
+            backgroundColor: isDarkMode ? '#333' : '#fff', // Set header background color based on dark mode
+          },
+          headerTintColor: isDarkMode ? '#fff' : '#333', // Set header text color based on dark mode
+        }}>
+        <Drawer.Screen name="Feed" component={NewsWidget} />
+        <Drawer.Screen name="Contact Us" component={ContactUs} />
+        <Drawer.Screen name="About Us" component={AboutUs} />
       </Drawer.Navigator>
     );
   }
 
   return (
-    <DarkModeProvider>
-
-    <NavigationContainer>
-      
-      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#333' : '#fff' }]}> 
-        <MyDrawer />
-      </SafeAreaView> 
-     </NavigationContainer>
-    </DarkModeProvider>
+    <Provider store={store}>
+      <NavigationContainer>
+        <SafeAreaView
+          style={[
+            styles.container,
+            {backgroundColor: isDarkMode ? '#333' : '#fff'},
+          ]}>
+          <MyDrawer />
+        </SafeAreaView>
+      </NavigationContainer>
+    </Provider>
   );
 };
 
