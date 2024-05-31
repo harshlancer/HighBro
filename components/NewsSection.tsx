@@ -42,7 +42,6 @@ const NewsWidget = () => {
   const dispatch = useDispatch();
   const isDarkMode = useSelector((state: any) => state.isDarkMode);
 
-
   useEffect(() => {
     fetchData(); // Fetch data initially when component mounts
     const intervalId = setInterval(fetchData, 36000000); // Fetch data every 1 minute (adjust as needed)
@@ -119,7 +118,6 @@ const NewsWidget = () => {
     const handleDark = () => {
       dispatch(toggleDarkMode());
     };
-  
 
     return (
       <View style={isDarkMode ? styles.darkCard : styles.card}>
@@ -170,9 +168,6 @@ const NewsWidget = () => {
               {isSpeaking ? 'Stop' : 'Speak'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleDark} style={[styles.button, { backgroundColor: isDarkMode ? '#A7D397' : '#000' }]}>
-      <Text style={styles.buttonText}>{isDarkMode ? "Light" : "Dark"}</Text>
-    </TouchableOpacity>
         </View>
       </View>
     );
@@ -311,19 +306,19 @@ const styles = StyleSheet.create({
   },
   summaryText: {
     fontSize: 16,
-    lineHeight: 22,
+    lineHeight: 19,
     color: '#555',
     marginBottom: 8,
   },
   darkSummaryText: {
     fontSize: 16,
-    lineHeight: 22,
+    lineHeight: 19,
     color: 'white',
     marginBottom: 8,
   },
   bannerImage: {
     width: '100%',
-    height: 400,
+    height: 300,
     resizeMode: 'cover',
     borderRadius: 8,
   },

@@ -1463,7 +1463,7 @@ instanceKlass java/net/URLConnection
 instanceKlass java/net/Authenticator
 instanceKlass org/gradle/wrapper/DownloadProgressListener
 instanceKlass org/gradle/wrapper/Download
-instanceKlass org/gradle/util/internal/WrapperDistributionUrlConverter
+instanceKlass org/gradle/util/internal/WrapperConverter
 instanceKlass org/gradle/wrapper/WrapperConfiguration
 instanceKlass org/gradle/wrapper/WrapperExecutor
 instanceKlass org/gradle/wrapper/Logger
