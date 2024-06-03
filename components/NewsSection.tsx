@@ -1,14 +1,17 @@
 import axios from 'axios';
-import {Linking} from 'react-native';
-import React, {useState, useEffect} from 'react';
+import {Linking, RefreshControl} from 'react-native';
+import React, {useState, useEffect, useRef} from 'react';
+import {captureRef} from 'react-native-view-shot';
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
-  Share,
   StyleSheet,
+  ScrollView,
 } from 'react-native';
+import Share from 'react-native-share';
+
 import Swiper from 'react-native-swiper';
 import Tts from 'react-native-tts';
 import {Dimensions} from 'react-native';
@@ -16,6 +19,7 @@ import {useSelector, useDispatch} from 'react-redux';
 import {toggleDarkMode} from '../store/actions/action';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 interface Article {
   title: string;
   description: string;
@@ -31,10 +35,10 @@ interface Props {
 const NewsWidget = () => {
   const [newsData, setNewsData] = useState<Article[]>([]);
   const [isSpeaking, setSpeaking] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const key = '995e4a922f2a496f9bbf2ffe227a4e33';
   const api_url =
     'https://newsapi.org/v2/top-headlines?country=in&category=business&apiKey=995e4a922f2a496f9bbf2ffe227a4e33';
-  // const {isDarkMode, setIsDarkMode} = useDarkMode(); // Use the useDarkMode hook
 
   const CACHE_KEY = 'newsData';
   const MAX_CACHE_SIZE = 50; // Adjust this as needed
@@ -42,17 +46,17 @@ const NewsWidget = () => {
   const dispatch = useDispatch();
   const isDarkMode = useSelector((state: any) => state.isDarkMode);
 
+  const viewRef = useRef(null);
+
   useEffect(() => {
     fetchData(); // Fetch data initially when component mounts
-    const intervalId = setInterval(fetchData, 36000000); // Fetch data every 1 minute (adjust as needed)
+    const intervalId = setInterval(fetchData, 36000000); // Fetch data every 10 hours (adjust as needed)
     return () => clearInterval(intervalId); // Clean up interval on unmount
   }, []);
 
   const fetchData = async () => {
     try {
-      const response = await axios.get(
-        'https://newsapi.org/v2/top-headlines?country=in&category=business&apiKey=995e4a922f2a496f9bbf2ffe227a4e33',
-      );
+      const response = await axios.get(api_url);
       const freshNews = response.data.articles.map((article: Article) => ({
         title: article.title,
         description: article.description,
@@ -80,6 +84,12 @@ const NewsWidget = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
+
   const handlePress = (url: string) => {
     if (url) {
       Linking.openURL(url).catch(err =>
@@ -92,15 +102,23 @@ const NewsWidget = () => {
     const showPlaceholderImage = !item.urlToImage || item.urlToImage === 'null';
     const widgetData = item.title;
     const text = item.title;
+
     const handleShare = async () => {
       try {
-        await Share.share({
-          title: item.title,
-          message: item.title + ' ' + item.description,
-          url: item.url,
+        const uri = await captureRef(viewRef, {
+          format: 'png',
+          quality: 0.8,
         });
+        const shareOptions = {
+          title: 'Share News',
+          message:
+            'Get High News with High Bro and share it with your friends! https://play.google.com/store/apps/details?id=com.highbro',
+          url: uri,
+          failOnCancel: false,
+        };
+        await Share.open(shareOptions);
       } catch (error) {
-        console.log(error);
+        console.error('Error sharing screenshot:', error);
       }
     };
 
@@ -115,6 +133,7 @@ const NewsWidget = () => {
         setSpeaking(false);
       }
     };
+
     const handleDark = () => {
       dispatch(toggleDarkMode());
     };
@@ -174,12 +193,17 @@ const NewsWidget = () => {
   };
 
   return (
-    <View style={isDarkMode ? styles.darkContainer : styles.container}>
+    <View
+      ref={viewRef}
+      style={isDarkMode ? styles.darkContainer : styles.container}>
       <Swiper
         loop={false}
         showsPagination={false}
         horizontal={false}
-        showsVerticalScrollIndicator>
+        showsVerticalScrollIndicator
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }>
         {newsData.map((item, index) => (
           <View key={index}>{renderNewsItem({item})}</View>
         ))}
@@ -187,8 +211,10 @@ const NewsWidget = () => {
     </View>
   );
 };
+
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
+
 interface Styles {
   container: {
     flex: number;
