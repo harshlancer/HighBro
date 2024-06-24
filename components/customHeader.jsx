@@ -1,8 +1,8 @@
-// CustomHeader.js
 import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import {useSelector, useDispatch} from 'react-redux';
 import {toggleDarkMode, refreshNews} from '../store/actions/action';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 
 const CustomHeader = ({navigation, route}) => {
   const dispatch = useDispatch();
@@ -24,11 +24,12 @@ const CustomHeader = ({navigation, route}) => {
         </Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={handleToggleDarkMode} style={styles.toggleButton}>
-        <Text style={[styles.toggleButtonText, {color: isDarkMode ? '#fff' : '#333'}]}>
-          {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-        </Text>
+        <Icon
+          name={isDarkMode ? "sun" : "moon"}
+          size={23}
+          color={isDarkMode ? '#fff' : '#333'}
+        />
       </TouchableOpacity>
-      
     </View>
   );
 };
@@ -43,17 +44,11 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
   },
   headerText: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 22,
   },
-  toggleButton: {
-    padding: 8,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
+ 
   toggleButtonText: {
-    fontSize: 14,
+    fontSize: 20,
   },
   refreshButton: {
     padding: 8,
