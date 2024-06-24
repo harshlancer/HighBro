@@ -2,7 +2,7 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import {useSelector, useDispatch} from 'react-redux';
-import {toggleDarkMode} from '../store/actions/action';
+import {toggleDarkMode, refreshNews} from '../store/actions/action';
 
 const CustomHeader = ({navigation, route}) => {
   const dispatch = useDispatch();
@@ -12,9 +12,13 @@ const CustomHeader = ({navigation, route}) => {
     dispatch(toggleDarkMode());
   };
 
+  const handleRefresh = () => {
+    dispatch(refreshNews());
+  };
+
   return (
     <View style={[styles.header, {backgroundColor: isDarkMode ? '#333' : '#fff'}]}>
-      <TouchableOpacity onPress={() => navigation.toggleDrawer()}>
+      <TouchableOpacity onPress={handleRefresh}>
         <Text style={[styles.headerText, {color: isDarkMode ? '#fff' : '#333'}]}>
           {route.name}
         </Text>
@@ -24,6 +28,7 @@ const CustomHeader = ({navigation, route}) => {
           {isDarkMode ? 'Light Mode' : 'Dark Mode'}
         </Text>
       </TouchableOpacity>
+      
     </View>
   );
 };
@@ -48,6 +53,15 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
   },
   toggleButtonText: {
+    fontSize: 14,
+  },
+  refreshButton: {
+    padding: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  refreshButtonText: {
     fontSize: 14,
   },
 });
