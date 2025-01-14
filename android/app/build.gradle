@@ -79,8 +79,11 @@ android {
         applicationId "com.highbro"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "1.1"
+        versionCode 4
+        versionName "2.0"
+         ndk {
+            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64' // Include necessary ABIs
+        }
     }
     signingConfigs {
         debug {

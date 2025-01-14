@@ -1,4 +1,3 @@
-// reducer.js
 import {TOGGLE_DARK_MODE, REFRESH_NEWS} from '../actions/action';
 
 const initialState = {
@@ -22,5 +21,4 @@ const darkModeReducer = (state = initialState, action) => {
       return state;
   }
 };
-
 export default darkModeReducer;
