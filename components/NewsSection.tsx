@@ -102,17 +102,35 @@ const NewsWidget = () => {
     const showPlaceholderImage = !item.urlToImage || item.urlToImage === 'null';
     const widgetData = item.title;
     const text = item.title;
+    const taglines = [
+      'Stay Informed, Stay Ahead with High Bro!',
+      'Get the Scoop in a Snap with High Bro!',
+      'Fast News, Fast Life – High Bro!',
+      'Your Daily News Fix, Simplified – High Bro!',
+      'Quick News, Big Impact – Share High Bro!',
+      'Instant Updates, Anytime, Anywhere – High Bro!',
+      'Catch Up Quick with High Bro – Share the News!',
+      'News That Moves – High Bro!',
+      'Bite-Sized News for a Busy World – High Bro!',
+      'Your News, Your Way – High Bro!',
+    ];
+
+    const getRandomTagline = () => {
+      const randomIndex = Math.floor(Math.random() * taglines.length);
+      return taglines[randomIndex];
+    };
 
     const handleShare = async () => {
       try {
         const uri = await captureRef(viewRef, {
           format: 'png',
-          quality: 0.8,
+          quality: 1,
         });
+        const randomTagline = getRandomTagline();
         const shareOptions = {
           title: 'Share News',
-          message:
-            'Get High News with High Bro and share it with your friends! https://play.google.com/store/apps/details?id=com.highbro',
+          message: `${randomTagline} 
+          https://play.google.com/store/apps/details?id=com.highbro`,
           url: uri,
           failOnCancel: false,
         };
