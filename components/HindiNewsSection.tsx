@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Linking } from 'react-native';
 import axios from 'axios';
-import { Linking } from 'react-native';
 import Share from 'react-native-share';
 import Tts from 'react-native-tts';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import HTMLParser from 'react-native-html-parser';
+import { toggleDarkMode } from '../store/actions/action';
 
 interface Article {
   title: string;
   image_src: string | null;
 }
 
-const HindiNewsSection = () => {
+interface Props {
+  onScroll: (event: any) => void;
+}
+
+const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
   const [newsData, setNewsData] = useState<Article[]>([]);
   const [isSpeaking, setSpeaking] = useState(false);
   const isDarkMode = useSelector((state: any) => state.isDarkMode);
@@ -103,10 +107,16 @@ const HindiNewsSection = () => {
           <TouchableOpacity onPress={() => handlePress(item.title)} style={styles.button}>
             <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}>Read More</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleShare(item.title)} style={[styles.button, { backgroundColor: '#27ae60' }]}>
+          <TouchableOpacity
+            onPress={() => handleShare(item.title)}
+            style={[styles.button, { backgroundColor: '#27ae60' }]}
+          >
             <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}>Share</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleSpeak(item.title)} style={[styles.button, { backgroundColor: 'gray' }]}>
+          <TouchableOpacity
+            onPress={() => handleSpeak(item.title)}
+            style={[styles.button, { backgroundColor: 'gray' }]}
+          >
             <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}>
               {isSpeaking ? 'Stop' : 'Speak'}
             </Text>
@@ -117,7 +127,11 @@ const HindiNewsSection = () => {
   };
 
   return (
-    <ScrollView style={isDarkMode ? styles.darkContainer : styles.container}>
+    <ScrollView
+      onScroll={onScroll}
+      scrollEventThrottle={16}
+      style={isDarkMode ? styles.darkContainer : styles.container}
+    >
       {newsData.map((item, index) => renderNewsItem(item))}
     </ScrollView>
   );
