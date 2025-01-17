@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Linking } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Linking, RefreshControl } from 'react-native';
 import axios from 'axios';
 import Share from 'react-native-share';
 import Tts from 'react-native-tts';
@@ -21,6 +21,7 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
   const [newsData, setNewsData] = useState<Article[]>([]);
   const [isSpeaking, setSpeaking] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false); // State for refresh control
   const isDarkMode = useSelector((state: any) => state.isDarkMode);
 
   useEffect(() => {
@@ -32,29 +33,29 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
       setLoading(true); // Set loading to true before fetching data
       const response = await axios.get('https://www.bhaskar.com/business/');
       const htmlString = response.data;
-  
+
       const DOMParser = HTMLParser.DOMParser;
       const doc = new DOMParser().parseFromString(htmlString, 'text/html');
-  
+
       const articles: Article[] = [];
       const h3Elements = doc.getElementsByTagName('h3');
       const uniqueTitles = new Set(); // To track unique titles
-  
+
       for (let i = 0; i < h3Elements.length; i++) {
         const titleElement = h3Elements[i];
         const title = titleElement.textContent.trim();
-  
+
         // Check if the title is already added
         if (uniqueTitles.has(title)) {
           continue; // Skip duplicate title
         }
-  
+
         uniqueTitles.add(title); // Add title to the set
-  
+
         let imageSrc = null;
         const imgElements = titleElement.parentNode.getElementsByTagName('img');
         const sourceElements = titleElement.parentNode.getElementsByTagName('source');
-  
+
         if (imgElements.length > 0) {
           imageSrc =
             imgElements[0].getAttribute('src') ||
@@ -65,16 +66,22 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
             imageSrc = imageSrc.split(',')[0].split(' ')[0]; // Extract first URL from srcset
           }
         }
-  
+
         articles.push({ title, image_src: imageSrc });
       }
-  
+
       setNewsData(articles);
     } catch (error) {
       console.error('Error fetching Hindi news data:', error);
     } finally {
       setLoading(false); // Set loading to false after data is fetched
+      setRefreshing(false); // Stop the refreshing state
     }
+  };
+
+  const handlePullToRefresh = () => {
+    setRefreshing(true); // Set refreshing state to true before fetching data
+    fetchNewsData();
   };
 
   const handlePress = (url: string) => {
@@ -151,7 +158,10 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
         <ScrollView
           onScroll={onScroll}
           scrollEventThrottle={16}
-          style={isDarkMode ? styles.darkContainer : styles.container}>
+          style={isDarkMode ? styles.darkContainer : styles.container}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handlePullToRefresh} />
+          }>
           {newsData.map((item, index) => renderNewsItem(item))}
         </ScrollView>
       )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,12 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
+  RefreshControl,
 } from 'react-native';
 import axios from 'axios';
 import HTMLParser from 'react-native-html-parser';
-import { toggleDarkMode } from '../store/actions/action';
-import { useDispatch, useSelector } from 'react-redux';
+import {toggleDarkMode} from '../store/actions/action';
+import {useDispatch, useSelector} from 'react-redux';
 import FastImage from 'react-native-fast-image';
 import Share from 'react-native-share';
 import Tts from 'react-native-tts';
@@ -23,9 +24,10 @@ interface Article {
 
 const StockMarketNews = () => {
   const [articles, setArticles] = useState<Article[]>([]);
-  const [speakingArticle, setSpeakingArticle] = useState<number | null>(null); // Track which article is being spoken
+  const [speakingArticle, setSpeakingArticle] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const isDarkMode = useSelector((state) => state.isDarkMode);
+  const [refreshing, setRefreshing] = useState(false); // State for refresh control
+  const isDarkMode = useSelector(state => state.isDarkMode);
   const dispatch = useDispatch();
 
   const handleToggleDarkMode = () => {
@@ -38,7 +40,7 @@ const StockMarketNews = () => {
       fetchNewsData();
     }, 15 * 60 * 1000); // 15 minutes
 
-    return () => clearInterval(interval); // Cleanup on component unmount
+    return () => clearInterval(interval);
   }, []);
 
   const fetchNewsData = async () => {
@@ -67,7 +69,7 @@ const StockMarketNews = () => {
           ? summaryElement.textContent.trim()
           : 'No summary available';
 
-        parsedArticles.push({ title, summary, link });
+        parsedArticles.push({title, summary, link});
       }
 
       setArticles(parsedArticles);
@@ -75,13 +77,14 @@ const StockMarketNews = () => {
       console.error('Error fetching news data:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false); // End refresh after data is loaded
     }
   };
 
   const handlePress = (url: string) => {
     if (url) {
-      Linking.openURL(url).catch((err) =>
-        console.error('Error opening URL:', err)
+      Linking.openURL(url).catch(err =>
+        console.error('Error opening URL:', err),
       );
     }
   };
@@ -101,15 +104,20 @@ const StockMarketNews = () => {
 
   const handleSpeak = (text: string, index: number) => {
     if (speakingArticle === index) {
-      Tts.stop(); // Stop speaking if the same article is clicked
-      setSpeakingArticle(null); // Reset the speaking state
+      Tts.stop();
+      setSpeakingArticle(null);
     } else {
       if (speakingArticle !== null) {
-        Tts.stop(); // Stop any currently speaking article
+        Tts.stop();
       }
-      Tts.speak(text); // Start speaking the clicked article
-      setSpeakingArticle(index); // Update the speaking state for the current article
+      Tts.speak(text);
+      setSpeakingArticle(index);
     }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true); // Start refresh
+    fetchNewsData();
   };
 
   const renderArticle = (article: Article, index: number) => (
@@ -123,20 +131,17 @@ const StockMarketNews = () => {
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
           onPress={() => handlePress(article.link)}
-          style={styles.button}
-        >
+          style={styles.button}>
           <Text style={styles.buttonText}>Read More</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => handleShare(article.title, article.link)}
-          style={[styles.button, { backgroundColor: '#27ae60' }]}
-        >
+          style={[styles.button, {backgroundColor: '#27ae60'}]}>
           <Text style={styles.buttonText}>Share</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => handleSpeak(article.summary, index)}
-          style={[styles.button, { backgroundColor: 'gray' }]}
-        >
+          style={[styles.button, {backgroundColor: 'gray'}]}>
           <Text style={styles.buttonText}>
             {speakingArticle === index ? 'Stop' : 'Speak'}
           </Text>
@@ -162,7 +167,12 @@ const StockMarketNews = () => {
           </Text>
         </View>
       ) : (
-        <ScrollView>{articles.map(renderArticle)}</ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }>
+          {articles.map(renderArticle)}
+        </ScrollView>
       )}
     </View>
   );
@@ -171,9 +181,12 @@ const StockMarketNews = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: '2%',
     backgroundColor: '#f5f5f5',
   },
   darkContainer: {
+    flex: 1,
+    padding: '2%',
     backgroundColor: '#121212',
   },
   loadingContainer: {
@@ -192,35 +205,50 @@ const styles = StyleSheet.create({
     color: '#555',
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#F8F8FF',
     borderRadius: 8,
     padding: 16,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
   },
   darkCard: {
-    backgroundColor: '#1e1e1e',
+    backgroundColor: 'black',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#4C4646',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   title: {
     color: 'black',
-    fontSize: 18,
+    fontFamily: 'oswald',
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   darkText: {
-    color: '#e0e0e0',
+    color: 'white',
+    fontFamily: 'oswald',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
   },
   summary: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#555',
     marginBottom: 12,
   },
   darkSummary: {
     color: '#a0a0a0',
+    fontSize: 16,
+    marginBottom: 12,
   },
   buttonsContainer: {
     flexDirection: 'row',
