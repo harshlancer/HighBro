@@ -6,6 +6,7 @@ import Tts from 'react-native-tts';
 import { useDispatch, useSelector } from 'react-redux';
 import HTMLParser from 'react-native-html-parser';
 import { toggleDarkMode } from '../store/actions/action';
+import FastImage from 'react-native-fast-image';
 
 interface Article {
   title: string;
@@ -19,6 +20,7 @@ interface Props {
 const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
   const [newsData, setNewsData] = useState<Article[]>([]);
   const [isSpeaking, setSpeaking] = useState(false);
+  const [loading, setLoading] = useState(true);
   const isDarkMode = useSelector((state: any) => state.isDarkMode);
 
   useEffect(() => {
@@ -27,23 +29,32 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
 
   const fetchNewsData = async () => {
     try {
+      setLoading(true); // Set loading to true before fetching data
       const response = await axios.get('https://www.bhaskar.com/business/');
       const htmlString = response.data;
-
+  
       const DOMParser = HTMLParser.DOMParser;
       const doc = new DOMParser().parseFromString(htmlString, 'text/html');
-
+  
       const articles: Article[] = [];
       const h3Elements = doc.getElementsByTagName('h3');
-
+      const uniqueTitles = new Set(); // To track unique titles
+  
       for (let i = 0; i < h3Elements.length; i++) {
         const titleElement = h3Elements[i];
         const title = titleElement.textContent.trim();
-
+  
+        // Check if the title is already added
+        if (uniqueTitles.has(title)) {
+          continue; // Skip duplicate title
+        }
+  
+        uniqueTitles.add(title); // Add title to the set
+  
         let imageSrc = null;
         const imgElements = titleElement.parentNode.getElementsByTagName('img');
         const sourceElements = titleElement.parentNode.getElementsByTagName('source');
-
+  
         if (imgElements.length > 0) {
           imageSrc =
             imgElements[0].getAttribute('src') ||
@@ -54,13 +65,15 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
             imageSrc = imageSrc.split(',')[0].split(' ')[0]; // Extract first URL from srcset
           }
         }
-
+  
         articles.push({ title, image_src: imageSrc });
       }
-
+  
       setNewsData(articles);
     } catch (error) {
       console.error('Error fetching Hindi news data:', error);
+    } finally {
+      setLoading(false); // Set loading to false after data is fetched
     }
   };
 
@@ -109,14 +122,12 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => handleShare(item.title)}
-            style={[styles.button, { backgroundColor: '#27ae60' }]}
-          >
+            style={[styles.button, { backgroundColor: '#27ae60' }]}>
             <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}>Share</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => handleSpeak(item.title)}
-            style={[styles.button, { backgroundColor: 'gray' }]}
-          >
+            style={[styles.button, { backgroundColor: 'gray' }]}>
             <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}>
               {isSpeaking ? 'Stop' : 'Speak'}
             </Text>
@@ -127,13 +138,24 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
   };
 
   return (
-    <ScrollView
-      onScroll={onScroll}
-      scrollEventThrottle={16}
-      style={isDarkMode ? styles.darkContainer : styles.container}
-    >
-      {newsData.map((item, index) => renderNewsItem(item))}
-    </ScrollView>
+    <View style={isDarkMode ? styles.darkContainer : styles.container}>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <FastImage
+            source={isDarkMode ? require('./loader.gif') : require('./light-loading.gif')}
+            style={styles.loader}
+          />
+          <Text style={isDarkMode ? styles.darkLoadingText : styles.loadingText}>Loading news...</Text>
+        </View>
+      ) : (
+        <ScrollView
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          style={isDarkMode ? styles.darkContainer : styles.container}>
+          {newsData.map((item, index) => renderNewsItem(item))}
+        </ScrollView>
+      )}
+    </View>
   );
 };
 
@@ -147,6 +169,26 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: '2%',
     backgroundColor: '#3b3c36',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loader: {
+    borderRadius: 500,
+    width: 400,
+    height: 400,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#555',
+  },
+  darkLoadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#e0e0e0',
   },
   card: {
     backgroundColor: '#F8F8FF',

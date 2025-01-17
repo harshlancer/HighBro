@@ -16,30 +16,28 @@ const App = () => {
 
   return (
     <Provider store={store}>
-      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1a1a1a' : '#f8f8f8' }]}> 
         {/* Custom Header with Transparent Background */}
-        <View style={[styles.header, { backgroundColor: 'rgba(255, 255, 255, 0.5)' }]}>
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => handleTabChange('Hindi News')}
-          >
-            <Text style={[styles.tabText, selectedTab === 'Hindi News' && styles.activeTab, { color: isDarkMode ? 'white' : 'black' }]}>
-              Hindi News
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => handleTabChange('English News')}
-          >
-            <Text style={[styles.tabText, selectedTab === 'English News' && styles.activeTab, { color: isDarkMode ? 'white' : 'black' }]}>
-              English News
-            </Text>
-          </TouchableOpacity>
+        <View style={[styles.header, { backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)' }]}> 
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tabButton, selectedTab === 'Hindi News' && styles.activeTabButton]}
+              onPress={() => handleTabChange('Hindi News')}
+            >
+              <Text style={[styles.tabText, selectedTab === 'Hindi News' && styles.activeTabText, { color: isDarkMode ? 'white' : 'black' }]}>Hindi News</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tabButton, selectedTab === 'English News' && styles.activeTabButton]}
+              onPress={() => handleTabChange('English News')}
+            >
+              <Text style={[styles.tabText, selectedTab === 'English News' && styles.activeTabText, { color: isDarkMode ? 'white' : 'black' }]}>English News</Text>
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity onPress={() => dispatch(toggleDarkMode())}>
             <Icon
-              name={isDarkMode ? "sun-o" : "moon-o"}
+              name={isDarkMode ? 'sun-o' : 'moon-o'}
               size={24}
-              color={isDarkMode ? "white" : "black"}
+              color={isDarkMode ? 'white' : 'black'}
             />
           </TouchableOpacity>
         </View>
@@ -63,17 +61,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)', // Transparent background
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'gray',
+  },
+  tabContainer: {
+    flexDirection: 'row',
   },
   tabButton: {
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    marginHorizontal: 5,
+  },
+  activeTabButton: {
+    backgroundColor: '#3498db',
   },
   tabText: {
     fontSize: 16,
     color: 'gray',
   },
-  activeTab: {
+  activeTabText: {
+    color: 'white',
     fontWeight: 'bold',
   },
 });
