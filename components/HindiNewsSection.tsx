@@ -1,23 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Linking, RefreshControl } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+  Linking,
+  RefreshControl,
+  Dimensions,
+} from 'react-native';
 import axios from 'axios';
 import Share from 'react-native-share';
 import Tts from 'react-native-tts';
-import { useDispatch, useSelector } from 'react-redux';
+import {useSelector} from 'react-redux';
 import HTMLParser from 'react-native-html-parser';
-import { toggleDarkMode } from '../store/actions/action';
 import FastImage from 'react-native-fast-image';
 
 interface Article {
   title: string;
   image_src: string | null;
+  url: string;
 }
 
 interface Props {
   onScroll: (event: any) => void;
 }
 
-const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
+const {height} = Dimensions.get('window');
+
+const HindiNewsSection: React.FC<Props> = ({onScroll}) => {
   const [newsData, setNewsData] = useState<Article[]>([]);
   const [isSpeaking, setSpeaking] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -30,7 +42,7 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
 
   const fetchNewsData = async () => {
     try {
-      setLoading(true); // Set loading to true before fetching data
+      setLoading(true);
       const response = await axios.get('https://www.bhaskar.com/business/');
       const htmlString = response.data;
 
@@ -38,44 +50,41 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
       const doc = new DOMParser().parseFromString(htmlString, 'text/html');
 
       const articles: Article[] = [];
-      const h3Elements = doc.getElementsByTagName('h3');
-      const uniqueTitles = new Set(); // To track unique titles
+      const liElements = doc.getElementsByTagName('li');
 
-      for (let i = 0; i < h3Elements.length; i++) {
-        const titleElement = h3Elements[i];
-        const title = titleElement.textContent.trim();
+      for (let i = 0; i < liElements.length; i++) {
+        const liElement = liElements[i];
 
-        // Check if the title is already added
-        if (uniqueTitles.has(title)) {
-          continue; // Skip duplicate title
-        }
+        // Check if the <li> element has the required classes
+        const classAttribute = liElement.getAttribute('class');
+        if (classAttribute && classAttribute.includes('c7ff6507 db9a2680')) {
+          const linkElement = liElement.getElementsByTagName('a')[0];
+          if (linkElement) {
+            const url = linkElement.getAttribute('href');
+            const titleElement = linkElement.getElementsByTagName('h3')[0];
+            const title = titleElement ? titleElement.textContent.trim() : 'No Title';
 
-        uniqueTitles.add(title); // Add title to the set
+            let imageSrc = null;
+            const imgElement = linkElement.getElementsByTagName('img')[0];
+            if (imgElement) {
+              imageSrc =
+                imgElement.getAttribute('src') ||
+                imgElement.getAttribute('data-src');
+            }
 
-        let imageSrc = null;
-        const imgElements = titleElement.parentNode.getElementsByTagName('img');
-        const sourceElements = titleElement.parentNode.getElementsByTagName('source');
-
-        if (imgElements.length > 0) {
-          imageSrc =
-            imgElements[0].getAttribute('src') ||
-            imgElements[0].getAttribute('data-src');
-        } else if (sourceElements.length > 0) {
-          imageSrc = sourceElements[0].getAttribute('srcset');
-          if (imageSrc && imageSrc.includes(',')) {
-            imageSrc = imageSrc.split(',')[0].split(' ')[0]; // Extract first URL from srcset
+            if (url) {
+              articles.push({title, image_src: imageSrc, url});
+            }
           }
         }
-
-        articles.push({ title, image_src: imageSrc });
       }
 
       setNewsData(articles);
     } catch (error) {
       console.error('Error fetching Hindi news data:', error);
     } finally {
-      setLoading(false); // Set loading to false after data is fetched
-      setRefreshing(false); // Stop the refreshing state
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -85,8 +94,14 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
   };
 
   const handlePress = (url: string) => {
+    console.log('URL:', url); // Debugging
     if (url) {
-      Linking.openURL(url).catch((err) => console.error('Error opening URL: ', err));
+      const absoluteUrl = url.startsWith('http')
+        ? url
+        : `https://www.bhaskar.com${url}`;
+      Linking.openURL(absoluteUrl).catch(err =>
+        console.error('Error opening URL: ', err),
+      );
     }
   };
 
@@ -113,32 +128,52 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
     }
   };
 
-  const renderNewsItem = (item: Article) => {
+  const renderNewsItem = ({item}: {item: Article}) => {
     const showPlaceholderImage = !item.image_src;
     return (
-      <View style={isDarkMode ? styles.darkCard : styles.card}>
-        <Text style={isDarkMode ? styles.darkTitle : styles.title}>{item.title}</Text>
-        {showPlaceholderImage ? (
-          <Image source={require('./No_Image_Available.png')} style={styles.bannerImage} />
-        ) : (
-          <Image source={{ uri: item.image_src }} style={styles.bannerImage} />
-        )}
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity onPress={() => handlePress(item.title)} style={styles.button}>
-            <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}>Read More</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleShare(item.title)}
-            style={[styles.button, { backgroundColor: '#27ae60' }]}>
-            <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}>Share</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleSpeak(item.title)}
-            style={[styles.button, { backgroundColor: 'gray' }]}>
-            <Text style={isDarkMode ? styles.darkButtonText : styles.buttonText}>
-              {isSpeaking ? 'Stop' : 'Speak'}
-            </Text>
-          </TouchableOpacity>
+      <View
+        style={[styles.cardContainer, isDarkMode && styles.darkCardContainer]}>
+        <View style={isDarkMode ? styles.darkCard : styles.card}>
+          <Text style={isDarkMode ? styles.darkTitle : styles.title}>
+            {item.title}
+          </Text>
+          {showPlaceholderImage ? (
+            <Image
+              source={require('./No_Image_Available.png')}
+              style={styles.bannerImage}
+            />
+          ) : (
+            <Image source={{uri: item.image_src}} style={styles.bannerImage} />
+          )}
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity
+              onPress={() => {
+                console.log('Read More Pressed:', item.url); // Debugging
+                handlePress(item.url);
+              }}
+              style={styles.button}>
+              <Text
+                style={isDarkMode ? styles.darkButtonText : styles.buttonText}>
+                Read More
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleShare(item.title)}
+              style={[styles.button, {backgroundColor: '#27ae60'}]}>
+              <Text
+                style={isDarkMode ? styles.darkButtonText : styles.buttonText}>
+                Share
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleSpeak(item.title)}
+              style={[styles.button, {backgroundColor: 'gray'}]}>
+              <Text
+                style={isDarkMode ? styles.darkButtonText : styles.buttonText}>
+                {isSpeaking ? 'Stop' : 'Speak'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     );
@@ -149,21 +184,32 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
       {loading ? (
         <View style={styles.loadingContainer}>
           <FastImage
-            source={isDarkMode ? require('./loader.gif') : require('./light-loading.gif')}
+            source={
+              isDarkMode
+                ? require('./loader.gif')
+                : require('./light-loading.gif')
+            }
             style={styles.loader}
           />
-          <Text style={isDarkMode ? styles.darkLoadingText : styles.loadingText}>Loading news...</Text>
+          <Text
+            style={isDarkMode ? styles.darkLoadingText : styles.loadingText}>
+            Loading news...
+          </Text>
         </View>
       ) : (
-        <ScrollView
-          onScroll={onScroll}
-          scrollEventThrottle={16}
-          style={isDarkMode ? styles.darkContainer : styles.container}
+        <FlatList
+          data={newsData}
+          renderItem={renderNewsItem}
+          keyExtractor={(item, index) => index.toString()}
+          pagingEnabled // Enable paging
+          showsVerticalScrollIndicator={false} // Hide scroll indicator
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handlePullToRefresh} />
-          }>
-          {newsData.map((item, index) => renderNewsItem(item))}
-        </ScrollView>
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handlePullToRefresh}
+            />
+          }
+        />
       )}
     </View>
   );
@@ -172,12 +218,18 @@ const HindiNewsSection: React.FC<Props> = ({ onScroll }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: '2%',
     backgroundColor: '#e5e4e2',
   },
   darkContainer: {
     flex: 1,
-    padding: '2%',
+    backgroundColor: '#3b3c36',
+  },
+  cardContainer: {
+    height: height - 100, // Adjust height to fit the screen
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  darkCardContainer: {
     backgroundColor: '#3b3c36',
   },
   loadingContainer: {
@@ -204,9 +256,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F8FF',
     borderRadius: 8,
     padding: 16,
-    marginBottom: 16,
+    width: '90%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
@@ -215,9 +267,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
     borderRadius: 8,
     padding: 16,
-    marginBottom: 16,
+    width: '90%',
     shadowColor: '#4C4646',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
